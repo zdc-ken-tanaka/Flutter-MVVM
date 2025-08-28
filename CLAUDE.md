@@ -1,10 +1,11 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+このファイルは、このリポジトリ内のコードを操作する際に Claude Code (claude.ai/code) にガイダンスを提供します。
 
 ## プロジェクト概要
 
-Flutter 2.0を使用したMVVMアーキテクチャのサンプル音楽プレーヤーアプリケーション。iTunes Search APIを使用してアーティスト名で楽曲を検索し、プレビュー再生できる。
+Flutter 2.0を使用したMVVMアーキテクチャのサンプル音楽プレーヤーアプリケーション。
+iTunes Search APIを使用してアーティスト名で楽曲を検索し、プレビュー再生できる。
 
 ## 開発コマンド
 
