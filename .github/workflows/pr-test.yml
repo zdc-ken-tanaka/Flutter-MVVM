@@ -55,119 +55,63 @@ jobs:
       # =========================================================================
       # Step 4: 固定マークダウンコメント生成
       # =========================================================================
-      # 目的: Mermaid図表を含む固定のダミーレポート（マークダウン表示テスト用）
-      - name: Create Fixed Markdown Comment
+      # 目的: シンプルなマークダウンテスト（YAML構文エラー回避）
+      - name: Create Simple Markdown Comment
         id: markdown
         run: |
-          # 固定のマークダウンレポートを作成（変数なし・シンプル版）
-          cat > /tmp/pr_report.md << 'EOF'
-# 🚀 自動PR分析レポート
-
-## 📊 PR統計情報
-
-**PR詳細情報:**
-- **PR番号:** #123
-- **タイトル:** テスト用プルリクエスト
-- **作成者:** @test-user
-- **変更ファイル数:** 5ファイル
-- **追加行数:** +42行
-- **削除行数:** -13行
-
-## 🔄 PRワークフローフロー
-
-```mermaid
-graph TD
-    A[👨‍💻 開発者がコード変更] --> B[📝 PR作成]
-    B --> C{🤖 GitHub Actions}
-    C --> D[📋 コード分析]
-    C --> E[🧪 テスト実行]
-    C --> F[📊 レポート生成]
-    D --> G[✅ レビュー準備完了]
-    E --> G
-    F --> G
-    G --> H[👥 人間レビュー]
-    H --> I{承認?}
-    I -->|Yes| J[🎉 マージ]
-    I -->|No| K[🔄 修正]
-    K --> A
-    
-    style A fill:#e1f5fe
-    style G fill:#e8f5e8
-    style J fill:#c8e6c9
-    style K fill:#ffecb3
-```
-
-## 📈 コードレビュープロセス
-
-```mermaid
-sequenceDiagram
-    participant Dev as 👨‍💻 開発者
-    participant GitHub as 📚 GitHub
-    participant Actions as 🤖 Actions
-    participant Reviewer as 👥 レビュアー
-    
-    Dev->>GitHub: 1. PR作成
-    GitHub->>Actions: 2. ワークフロー起動
-    Actions->>Actions: 3. コード分析実行
-    Actions->>GitHub: 4. 分析結果投稿
-    GitHub->>Reviewer: 5. レビュー通知
-    Reviewer->>GitHub: 6. コードレビュー
-    alt 承認の場合
-        Reviewer->>GitHub: 7a. 承認
-        GitHub->>GitHub: 8a. マージ
-    else 修正要求の場合
-        Reviewer->>Dev: 7b. 修正依頼
-        Dev->>GitHub: 8b. 追加コミット
-        GitHub->>Actions: 9b. 再分析
-    end
-```
-
-## 🔍 変更ファイル詳細
-
-**変更されたファイル一覧:**
-```
-- src/main.py
-- tests/test_main.py
-- README.md
-- docs/api.md
-- package.json
-```
-
-## 📝 推奨アクション
-
-### ✅ レビュー観点
-- [ ] **コード品質**: 可読性・保守性の確認
-- [ ] **セキュリティ**: 脆弱性の有無をチェック
-- [ ] **パフォーマンス**: 処理効率の検証
-- [ ] **テスト**: 適切なテストカバレッジ
-- [ ] **ドキュメント**: 必要に応じて更新
-
-### 🎯 次のステップ
-1. **コードレビュー実施**
-2. **フィードバック反映**
-3. **最終確認・承認**
-4. **マージ実行**
-
-## 📚 関連リンク
-
-- 📖 [コーディング規約](https://example.com/coding-standards)
-- 🧪 [テストガイドライン](https://example.com/testing-guide)  
-- 🔒 [セキュリティチェックリスト](https://example.com/security-checklist)
-
----
-🤖 **自動生成レポート** | ⏰ 生成時刻: 2024-08-28 10:30:00 UTC
-EOF
+          # エコーを使って直接マークダウンを作成（ヒアドキュメント回避）
+          echo "# 🚀 自動PR分析レポート" > /tmp/comment.md
+          echo "" >> /tmp/comment.md
+          echo "## 📊 PR統計情報" >> /tmp/comment.md
+          echo "" >> /tmp/comment.md
+          echo "- **PR番号:** 123" >> /tmp/comment.md
+          echo "- **タイトル:** テスト用プルリクエスト" >> /tmp/comment.md
+          echo "- **作成者:** test-user" >> /tmp/comment.md
+          echo "- **変更ファイル数:** 5ファイル" >> /tmp/comment.md
+          echo "" >> /tmp/comment.md
+          echo "## 🔄 PRワークフロー" >> /tmp/comment.md
+          echo "" >> /tmp/comment.md
+          echo '```mermaid' >> /tmp/comment.md
+          echo 'graph TD' >> /tmp/comment.md
+          echo '    A[開発者] --> B[PR作成]' >> /tmp/comment.md
+          echo '    B --> C[GitHub Actions]' >> /tmp/comment.md
+          echo '    C --> D[コード分析]' >> /tmp/comment.md
+          echo '    D --> E[レビュー]' >> /tmp/comment.md
+          echo '    E --> F[マージ]' >> /tmp/comment.md
+          echo '```' >> /tmp/comment.md
+          echo "" >> /tmp/comment.md
+          echo "## 📈 シーケンス図" >> /tmp/comment.md
+          echo "" >> /tmp/comment.md
+          echo '```mermaid' >> /tmp/comment.md
+          echo 'sequenceDiagram' >> /tmp/comment.md
+          echo '    participant A as 開発者' >> /tmp/comment.md
+          echo '    participant B as GitHub' >> /tmp/comment.md
+          echo '    A->>B: PR作成' >> /tmp/comment.md
+          echo '    B->>A: レビュー依頼' >> /tmp/comment.md
+          echo '    A->>B: 修正対応' >> /tmp/comment.md
+          echo '    B->>A: マージ完了' >> /tmp/comment.md
+          echo '```' >> /tmp/comment.md
+          echo "" >> /tmp/comment.md
+          echo "## ✅ チェックリスト" >> /tmp/comment.md
+          echo "" >> /tmp/comment.md
+          echo "- [ ] コード品質確認" >> /tmp/comment.md
+          echo "- [ ] セキュリティチェック" >> /tmp/comment.md
+          echo "- [ ] テスト実行" >> /tmp/comment.md
+          echo "- [ ] ドキュメント更新" >> /tmp/comment.md
+          echo "" >> /tmp/comment.md
+          echo "---" >> /tmp/comment.md
+          echo "🤖 **自動生成レポート**" >> /tmp/comment.md
           
           # ファイル内容をGitHub Actions出力変数に設定
           echo "MARKDOWN_COMMENT<<EOF" >> $GITHUB_OUTPUT
-          cat /tmp/pr_report.md >> $GITHUB_OUTPUT
+          cat /tmp/comment.md >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
       # =========================================================================
-      # Step 5: PRへの固定コメント投稿
+      # Step 5: PRへのシンプルコメント投稿
       # =========================================================================
-      # 目的: 固定のマークダウンレポートを実際のPRにコメントとして投稿
-      - name: Post Fixed Markdown Comment
+      # 目的: echoで作成したマークダウンをPRにコメント投稿
+      - name: Post Simple Markdown Comment
         uses: actions/github-script@v7  # GitHubAPIを簡単に使えるアクション
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}  # 自動提供される認証トークン
