@@ -71,14 +71,13 @@ jobs:
 
 ## 📊 PR統計情報
 
-| 項目 | 値 |
-|------|-----|
-| **PR番号** | #${{ github.event.pull_request.number }} |
-| **タイトル** | ${{ github.event.pull_request.title }} |
-| **作成者** | @${{ github.event.pull_request.user.login }} |
-| **変更ファイル数** | CHANGED_FILES_COUNT_PLACEHOLDER |
-| **追加行数** | +ADDITIONS_PLACEHOLDER |
-| **削除行数** | -DELETIONS_PLACEHOLDER |
+**PR詳細情報:**
+- **PR番号:** #${{ github.event.pull_request.number }}
+- **タイトル:** ${{ github.event.pull_request.title }}
+- **作成者:** @${{ github.event.pull_request.user.login }}
+- **変更ファイル数:** CHANGED_FILES_COUNT_PLACEHOLDER
+- **追加行数:** +ADDITIONS_PLACEHOLDER
+- **削除行数:** -DELETIONS_PLACEHOLDER
 
 ## 🔄 PRワークフローフロー
 
