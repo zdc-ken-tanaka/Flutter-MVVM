@@ -53,31 +53,25 @@ jobs:
           git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }}
 
       # =========================================================================
-      # Step 4: リッチマークダウンコメント生成
+      # Step 4: 固定マークダウンコメント生成
       # =========================================================================
-      # 目的: Mermaid図表を含む豪華なPRレポートを生成（Claude Code統合テスト）
-      - name: Create Rich Markdown Comment
-        id: markdown  # 後続ステップで参照するためのID
+      # 目的: Mermaid図表を含む固定のダミーレポート（マークダウン表示テスト用）
+      - name: Create Fixed Markdown Comment
+        id: markdown
         run: |
-          # PR統計情報を取得
-          CHANGED_FILES_COUNT=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | wc -l)
-          ADDITIONS=${{ github.event.pull_request.additions }}
-          DELETIONS=${{ github.event.pull_request.deletions }}
-          
-          # ヒアドキュメント形式でマークダウンレポート作成
-          # 注意: EOFをクォートで囲むことで変数展開を無効化
-          COMMENT_BODY=$(cat << 'EOF'
+          # 固定のマークダウンレポートを作成（変数なし・シンプル版）
+          cat > /tmp/pr_report.md << 'EOF'
 # 🚀 自動PR分析レポート
 
 ## 📊 PR統計情報
 
 **PR詳細情報:**
-- **PR番号:** #${{ github.event.pull_request.number }}
-- **タイトル:** ${{ github.event.pull_request.title }}
-- **作成者:** @${{ github.event.pull_request.user.login }}
-- **変更ファイル数:** CHANGED_FILES_COUNT_PLACEHOLDER
-- **追加行数:** +ADDITIONS_PLACEHOLDER
-- **削除行数:** -DELETIONS_PLACEHOLDER
+- **PR番号:** #123
+- **タイトル:** テスト用プルリクエスト
+- **作成者:** @test-user
+- **変更ファイル数:** 5ファイル
+- **追加行数:** +42行
+- **削除行数:** -13行
 
 ## 🔄 PRワークフローフロー
 
@@ -132,7 +126,11 @@ sequenceDiagram
 
 **変更されたファイル一覧:**
 ```
-CHANGED_FILES_LIST_PLACEHOLDER
+- src/main.py
+- tests/test_main.py
+- README.md
+- docs/api.md
+- package.json
 ```
 
 ## 📝 推奨アクション
@@ -157,29 +155,19 @@ CHANGED_FILES_LIST_PLACEHOLDER
 - 🔒 [セキュリティチェックリスト](https://example.com/security-checklist)
 
 ---
-🤖 **自動生成レポート** | ⏰ 生成時刻: $(date '+%Y-%m-%d %H:%M:%S UTC') | 🔗 [ワークフロー詳細](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+🤖 **自動生成レポート** | ⏰ 生成時刻: 2024-08-28 10:30:00 UTC
 EOF
-)
           
-          # プレースホルダーを実際の値に置換（sed使用）
-          COMMENT_BODY=$(echo "$COMMENT_BODY" | sed "s/CHANGED_FILES_COUNT_PLACEHOLDER/$CHANGED_FILES_COUNT/g")
-          COMMENT_BODY=$(echo "$COMMENT_BODY" | sed "s/ADDITIONS_PLACEHOLDER/$ADDITIONS/g")
-          COMMENT_BODY=$(echo "$COMMENT_BODY" | sed "s/DELETIONS_PLACEHOLDER/$DELETIONS/g")
-          
-          # 変更ファイル一覧を取得してリスト形式に変換
-          CHANGED_FILES_LIST=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | sed 's/^/- /')
-          COMMENT_BODY=$(echo "$COMMENT_BODY" | sed "s|CHANGED_FILES_LIST_PLACEHOLDER|$CHANGED_FILES_LIST|g")
-          
-          # GitHub Actions出力変数に設定（複数行対応）
+          # ファイル内容をGitHub Actions出力変数に設定
           echo "MARKDOWN_COMMENT<<EOF" >> $GITHUB_OUTPUT
-          echo "$COMMENT_BODY" >> $GITHUB_OUTPUT
+          cat /tmp/pr_report.md >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
       # =========================================================================
-      # Step 5: PRへのコメント投稿
+      # Step 5: PRへの固定コメント投稿
       # =========================================================================
-      # 目的: 生成したマークダウンレポートを実際のPRにコメントとして投稿
-      - name: Post Rich Markdown Comment
+      # 目的: 固定のマークダウンレポートを実際のPRにコメントとして投稿
+      - name: Post Fixed Markdown Comment
         uses: actions/github-script@v7  # GitHubAPIを簡単に使えるアクション
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}  # 自動提供される認証トークン
