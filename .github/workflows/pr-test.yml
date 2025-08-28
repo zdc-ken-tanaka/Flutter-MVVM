@@ -1,22 +1,39 @@
+# =============================================================================
+# PR Test Workflow - プルリクエスト自動分析・コメント投稿テスト
+# =============================================================================
+# 目的: PRトリガーでマークダウン+Mermaid図表をテストし、Claude Code統合準備
+# 動作: PR作成時に自動でリッチなレポートコメントを投稿
+
 name: PR Test Workflow
 
-# PRトリガー設定
+# PRイベントトリガー設定
 on:
   pull_request:
-    types: [opened, synchronize, reopened]
+    types: [opened, synchronize, reopened]  # PR作成・更新・再オープン時
 
 jobs:
   pr-test:
     runs-on: ubuntu-latest
     
+    # 権限設定（PRコメント投稿に必要）
+    permissions:
+      contents: read        # リポジトリ内容の読み取り
+      pull-requests: write  # PRコメント投稿権限
+    
     steps:
-      # 1. リポジトリをチェックアウト
+      # =========================================================================
+      # Step 1: リポジトリのチェックアウト
+      # =========================================================================
+      # 目的: PR変更内容を解析するためリポジトリ全体をrunner上に取得
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # 全履歴取得（差分比較用）
+          fetch-depth: 0  # 全履歴取得（差分比較に必要）
 
-      # 2. PR情報を表示
+      # =========================================================================
+      # Step 2: PR基本情報の表示（ログ用）
+      # =========================================================================
+      # 目的: デバッグ・確認用にPR情報をActions実行ログに出力
       - name: Display PR Information
         run: |
           echo "🎯 PR Information"
@@ -25,66 +42,166 @@ jobs:
           echo "PR Author: ${{ github.event.pull_request.user.login }}"
           echo "Base Branch: ${{ github.event.pull_request.base.ref }}"
           echo "Head Branch: ${{ github.event.pull_request.head.ref }}"
-          echo "Changed Files Count: ${{ github.event.pull_request.changed_files }}"
 
-      # 3. 変更されたファイルを一覧表示
+      # =========================================================================
+      # Step 3: 変更ファイル一覧表示（ログ用）
+      # =========================================================================
+      # 目的: どのファイルが変更されたかをActions実行ログに出力
       - name: List Changed Files
         run: |
           echo "📁 Changed Files:"
           git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }}
 
-      # 4. 簡単なコード分析（例：ファイル数カウント）
-      - name: Basic Code Analysis
+      # =========================================================================
+      # Step 4: リッチマークダウンコメント生成
+      # =========================================================================
+      # 目的: Mermaid図表を含む豪華なPRレポートを生成（Claude Code統合テスト）
+      - name: Create Rich Markdown Comment
+        id: markdown  # 後続ステップで参照するためのID
         run: |
-          echo "📊 Basic Analysis:"
-          echo "Total files: $(find . -type f -name '*.py' -o -name '*.js' -o -name '*.md' | wc -l)"
-          echo "Python files: $(find . -name '*.py' | wc -l)"
-          echo "JavaScript files: $(find . -name '*.js' | wc -l)"
-          echo "Markdown files: $(find . -name '*.md' | wc -l)"
+          # PR統計情報を取得
+          CHANGED_FILES_COUNT=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | wc -l)
+          ADDITIONS=${{ github.event.pull_request.additions }}
+          DELETIONS=${{ github.event.pull_request.deletions }}
+          
+          # ヒアドキュメント形式でマークダウンレポート作成
+          # 注意: EOFをクォートで囲むことで変数展開を無効化
+          COMMENT_BODY=$(cat << 'EOF'
+# 🚀 自動PR分析レポート
 
-      # 5. PR変更サマリーを作成
-      - name: Create PR Summary
-        id: summary
-        run: |
-          SUMMARY="## 🔍 PR Analysis Summary
+## 📊 PR統計情報
+
+| 項目 | 値 |
+|------|-----|
+| **PR番号** | #${{ github.event.pull_request.number }} |
+| **タイトル** | ${{ github.event.pull_request.title }} |
+| **作成者** | @${{ github.event.pull_request.user.login }} |
+| **変更ファイル数** | CHANGED_FILES_COUNT_PLACEHOLDER |
+| **追加行数** | +ADDITIONS_PLACEHOLDER |
+| **削除行数** | -DELETIONS_PLACEHOLDER |
+
+## 🔄 PRワークフローフロー
+
+```mermaid
+graph TD
+    A[👨‍💻 開発者がコード変更] --> B[📝 PR作成]
+    B --> C{🤖 GitHub Actions}
+    C --> D[📋 コード分析]
+    C --> E[🧪 テスト実行]
+    C --> F[📊 レポート生成]
+    D --> G[✅ レビュー準備完了]
+    E --> G
+    F --> G
+    G --> H[👥 人間レビュー]
+    H --> I{承認?}
+    I -->|Yes| J[🎉 マージ]
+    I -->|No| K[🔄 修正]
+    K --> A
+    
+    style A fill:#e1f5fe
+    style G fill:#e8f5e8
+    style J fill:#c8e6c9
+    style K fill:#ffecb3
+```
+
+## 📈 コードレビュープロセス
+
+```mermaid
+sequenceDiagram
+    participant Dev as 👨‍💻 開発者
+    participant GitHub as 📚 GitHub
+    participant Actions as 🤖 Actions
+    participant Reviewer as 👥 レビュアー
+    
+    Dev->>GitHub: 1. PR作成
+    GitHub->>Actions: 2. ワークフロー起動
+    Actions->>Actions: 3. コード分析実行
+    Actions->>GitHub: 4. 分析結果投稿
+    GitHub->>Reviewer: 5. レビュー通知
+    Reviewer->>GitHub: 6. コードレビュー
+    alt 承認の場合
+        Reviewer->>GitHub: 7a. 承認
+        GitHub->>GitHub: 8a. マージ
+    else 修正要求の場合
+        Reviewer->>Dev: 7b. 修正依頼
+        Dev->>GitHub: 8b. 追加コミット
+        GitHub->>Actions: 9b. 再分析
+    end
+```
+
+## 🔍 変更ファイル詳細
+
+**変更されたファイル一覧:**
+```
+CHANGED_FILES_LIST_PLACEHOLDER
+```
+
+## 📝 推奨アクション
+
+### ✅ レビュー観点
+- [ ] **コード品質**: 可読性・保守性の確認
+- [ ] **セキュリティ**: 脆弱性の有無をチェック
+- [ ] **パフォーマンス**: 処理効率の検証
+- [ ] **テスト**: 適切なテストカバレッジ
+- [ ] **ドキュメント**: 必要に応じて更新
+
+### 🎯 次のステップ
+1. **コードレビュー実施**
+2. **フィードバック反映**
+3. **最終確認・承認**
+4. **マージ実行**
+
+## 📚 関連リンク
+
+- 📖 [コーディング規約](https://example.com/coding-standards)
+- 🧪 [テストガイドライン](https://example.com/testing-guide)  
+- 🔒 [セキュリティチェックリスト](https://example.com/security-checklist)
+
+---
+🤖 **自動生成レポート** | ⏰ 生成時刻: $(date '+%Y-%m-%d %H:%M:%S UTC') | 🔗 [ワークフロー詳細](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+EOF
+)
           
-          **PR #${{ github.event.pull_request.number }}**: ${{ github.event.pull_request.title }}
+          # プレースホルダーを実際の値に置換（sed使用）
+          COMMENT_BODY=$(echo "$COMMENT_BODY" | sed "s/CHANGED_FILES_COUNT_PLACEHOLDER/$CHANGED_FILES_COUNT/g")
+          COMMENT_BODY=$(echo "$COMMENT_BODY" | sed "s/ADDITIONS_PLACEHOLDER/$ADDITIONS/g")
+          COMMENT_BODY=$(echo "$COMMENT_BODY" | sed "s/DELETIONS_PLACEHOLDER/$DELETIONS/g")
           
-          ### 📊 Statistics
-          - **Changed Files**: ${{ github.event.pull_request.changed_files }}
-          - **Additions**: +${{ github.event.pull_request.additions }}
-          - **Deletions**: -${{ github.event.pull_request.deletions }}
+          # 変更ファイル一覧を取得してリスト形式に変換
+          CHANGED_FILES_LIST=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | sed 's/^/- /')
+          COMMENT_BODY=$(echo "$COMMENT_BODY" | sed "s|CHANGED_FILES_LIST_PLACEHOLDER|$CHANGED_FILES_LIST|g")
           
-          ### 📝 Changed Files List
-          \`\`\`
-          $(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }})
-          \`\`\`
-          
-          ---
-          *Auto-generated by GitHub Actions* ⚡"
-          
-          # 複数行文字列をGitHub Actions環境変数にセット
-          echo "SUMMARY<<EOF" >> $GITHUB_OUTPUT
-          echo "$SUMMARY" >> $GITHUB_OUTPUT
+          # GitHub Actions出力変数に設定（複数行対応）
+          echo "MARKDOWN_COMMENT<<EOF" >> $GITHUB_OUTPUT
+          echo "$COMMENT_BODY" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
-      # 6. PRにコメントを投稿（権限があれば）
-      # - name: Comment on PR
-      #   uses: actions/github-script@v7
-      #   with:
-      #     github-token: ${{ secrets.GITHUB_TOKEN }}
-      #     script: |
-      #       const summary = `${{ steps.summary.outputs.SUMMARY }}`;
+      # =========================================================================
+      # Step 5: PRへのコメント投稿
+      # =========================================================================
+      # 目的: 生成したマークダウンレポートを実際のPRにコメントとして投稿
+      - name: Post Rich Markdown Comment
+        uses: actions/github-script@v7  # GitHubAPIを簡単に使えるアクション
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}  # 自動提供される認証トークン
+          script: |
+            // 前ステップで生成したマークダウンコメントを取得
+            const markdownComment = `${{ steps.markdown.outputs.MARKDOWN_COMMENT }}`;
             
-      #       github.rest.issues.createComment({
-      #         issue_number: context.issue.number,
-      #         owner: context.repo.owner,
-      #         repo: context.repo.repo,
-      #         body: summary
-      #       });
+            // GitHub REST APIを使ってPRにコメント投稿
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,  // PR番号
+              owner: context.repo.owner,           // リポジトリ所有者
+              repo: context.repo.repo,             // リポジトリ名
+              body: markdownComment                // コメント本文
+            });
 
-      # 7. 成功メッセージ
+      # =========================================================================
+      # Step 6: 完了メッセージ
+      # =========================================================================
+      # 目的: ワークフロー完了をログに記録
       - name: Test Complete
         run: |
           echo "✅ PR Test Workflow completed successfully!"
+          echo "🎨 Rich markdown comment with Mermaid diagrams posted!"
           echo "🎉 Ready for Claude Code integration!"
