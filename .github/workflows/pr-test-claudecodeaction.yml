@@ -1,0 +1,78 @@
+# =============================================================================
+# Claude Code Action ワークフロー - @claude メンションでAI自動作業
+# =============================================================================
+# 動作: @claude とメンションすると、Claude AIがコード分析・実装・レビューを自動実行
+# 前提: CLAUDE_CODE_OAUTH_TOKEN の設定が必要（Claude Maxプラン用）
+
+name: Claude Assistant
+
+# トリガー設定 - @claude メンション検知用
+on:
+  issue_comment:
+    types: [created]                    # Issueコメントでの@claude対応
+  pull_request_review_comment:
+    types: [created]                    # PR行別コメントでの@claude対応
+  issues:
+    types: [opened, assigned]           # Issue自動対応（オプション）
+  pull_request_review:
+    types: [submitted]                  # PRレビューでの@claude対応
+
+jobs:
+  claude-response:
+    runs-on: ubuntu-latest
+    
+    # Claude がコード修正・PR作成・コメント投稿するための権限
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+
+    steps:
+      # リポジトリをrunner上に取得（Claude がコード全体を解析可能に）
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Claude Code Action依存環境の準備
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.2.11"
+
+      # Claude Code Action実行
+      - name: Run Claude Code Action
+        uses: anthropics/claude-code-action@beta
+        with:
+          # Claude Max プラン用OAuth認証トークン（必須）
+          # 設定: GitHub Settings → Secrets → CLAUDE_CODE_OAUTH_TOKEN
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          
+          # GitHub API操作用（自動提供）
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          
+          # 起動フレーズ（カスタマイズ可能）
+          trigger_phrase: "@claude"
+
+# =============================================================================
+# 使用例とベストプラクティス
+# =============================================================================
+# 
+# 【基本的な使用方法】
+# 1. Issue/PRコメントで「@claude バグを修正して」
+# 2. 「@claude このコードをレビューして」  
+# 3. 「@claude テストを追加して」
+#
+# 【高度な使用例】
+# - 「@claude このAPIの実装を完成させて、適切なエラーハンドリングも含めて」
+# - 「@claude セキュリティ脆弱性をチェックして、問題があれば修正提案を」
+# - 「@claude パフォーマンスを改善するためのリファクタリング案を提示して」
+#
+# 【注意事項】
+# - Claude Code OAuth Tokenの設定が必須
+# - 大量のAPIコール時はAnthropic使用料金に注意
+# - 重要なコード変更前は人間によるレビューを推奨
+#
+# 【トラブルシューティング】
+# - 動作しない場合: CLAUDE_CODE_OAUTH_TOKEN設定確認
+# - 権限エラー: permissions設定確認
+# - タイムアウト: timeout_minutes調整検討
+# =============================================================================
