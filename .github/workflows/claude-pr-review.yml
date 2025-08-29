@@ -44,7 +44,6 @@ jobs:
           # v1形式: claude_args でオプション指定
           claude_args: |
             --max-turns 5
-            --timeout 10m
 
           # Claude認証（Maxプランの場合）
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
