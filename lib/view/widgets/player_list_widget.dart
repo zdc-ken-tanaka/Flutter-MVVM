@@ -16,6 +16,7 @@ class PlayerListWidget extends StatefulWidget {
 class _PlayerListWidgetState extends State<PlayerListWidget> {
   Widget _buildSongItem(Media media) {
     Media? _selectedMedia = Provider.of<MediaViewModel>(context).media;
+    MediaViewModel _viewModel = Provider.of<MediaViewModel>(context);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
       child: Row(
@@ -70,12 +71,31 @@ class _PlayerListWidgetState extends State<PlayerListWidget> {
                   ),
                 ]),
           ),
-          if (_selectedMedia != null &&
-              _selectedMedia.trackName == media.trackName)
-            Icon(
-              Icons.play_circle_outline,
-              color: Theme.of(context).primaryColor,
-            ),
+          Row(
+            children: [
+              IconButton(
+                icon: Icon(
+                  media.isFavorite ? Icons.favorite : Icons.favorite_border,
+                  color: media.isFavorite ? Colors.red : Colors.grey,
+                ),
+                onPressed: () {
+                  if (media.trackId != null) {
+                    if (media.isFavorite) {
+                      _viewModel.removeFromFavorites(media.trackId!);
+                    } else {
+                      _viewModel.addToFavorites(media);
+                    }
+                  }
+                },
+              ),
+              if (_selectedMedia != null &&
+                  _selectedMedia.trackName == media.trackName)
+                Icon(
+                  Icons.play_circle_outline,
+                  color: Theme.of(context).primaryColor,
+                ),
+            ],
+          ),
         ],
       ),
     );
