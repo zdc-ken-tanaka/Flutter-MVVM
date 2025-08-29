@@ -36,11 +36,16 @@ jobs:
 
       # Claude による自動PRレビュー実行
       - name: Run Claude PR Review
-        uses: anthropics/claude-code-action@beta
+        uses: anthropics/claude-code-action@v1
         with:
           # レビュー用プロンプトファイルを指定
-          prompt_file: ".claude/prompts/pr-review.md"
+          prompt: ".claude/prompts/pr-review.md"
           
+          # v1形式: claude_args でオプション指定
+          claude_args: |
+            --max-turns 5
+            --timeout 10m
+
           # Claude認証（Maxプランの場合）
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           
@@ -49,7 +54,3 @@ jobs:
           
           # GitHub API操作用（自動提供）
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          
-          # オプション: レビューの詳細度調整
-          max_turns: 5
-          timeout_minutes: 10
