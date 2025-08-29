@@ -1,0 +1,55 @@
+# =============================================================================
+# Claude PR自動レビューワークフロー - PR作成時の自動コードレビュー
+# =============================================================================
+# 動作: PR作成・更新時に自動でClaude がコードレビューを実行し、結果をコメント投稿
+# 前提: 別ファイルのレビュープロンプト + Claude認証設定が必要
+
+name: Claude PR Auto Review
+
+# PR作成・更新契機でのトリガー
+on:
+  pull_request:
+    types: [opened, synchronize]       # PR作成・更新時に自動実行
+
+jobs:
+  auto-review:
+    runs-on: ubuntu-latest
+    
+    # Claude がレビューコメントを投稿するための権限
+    permissions:
+      contents: read
+      pull-requests: write
+      id-token: write
+
+    steps:
+      # リポジトリ全体をチェックアウト（レビュープロンプトファイル取得用）
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0                # 差分分析のため全履歴取得
+
+      # Claude Code Action依存環境準備
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.2.11"
+
+      # Claude による自動PRレビュー実行
+      - name: Run Claude PR Review
+        uses: anthropics/claude-code-action@beta
+        with:
+          # レビュー用プロンプトファイルを指定
+          prompt_file: ".claude/prompts/pr-review.md"
+          
+          # Claude認証（Maxプランの場合）
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          
+          # または従量課金の場合（どちらか片方のみ設定）
+          # anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          
+          # GitHub API操作用（自動提供）
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          
+          # オプション: レビューの詳細度調整
+          max_turns: 5
+          timeout_minutes: 10
