@@ -31,6 +31,8 @@ class _PlayerWidgetState extends State<PlayerWidget> {
   late AudioPlayer _audioPlayer;
   Duration? _duration;
   Duration? _position;
+  double _volume = 0.5;
+  bool _isMuted = false;
 
   PlayerState _playerState = PlayerState.stopped;
   StreamSubscription? _durationSubscription;
@@ -150,6 +152,54 @@ class _PlayerWidgetState extends State<PlayerWidget> {
                 ],
               ),
             ),
+            Padding(
+              padding: EdgeInsets.only(left: 12.0, right: 12.0, top: 8.0),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: Icon(
+                      _isMuted ? Icons.volume_off : Icons.volume_up,
+                      color: Theme.of(context).accentColor,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _isMuted = !_isMuted;
+                        if (_isMuted) {
+                          _audioPlayer.setVolume(0.0);
+                        } else {
+                          _audioPlayer.setVolume(_volume);
+                        }
+                      });
+                    },
+                  ),
+                  Expanded(
+                    child: Slider(
+                      value: _isMuted ? 0.0 : _volume,
+                      min: 0.0,
+                      max: 1.0,
+                      activeColor: Theme.of(context).accentColor,
+                      onChanged: (value) {
+                        setState(() {
+                          _volume = value;
+                          _isMuted = false;
+                          _audioPlayer.setVolume(value);
+                        });
+                      },
+                    ),
+                  ),
+                  Container(
+                    width: 40,
+                    child: Text(
+                      '${(_isMuted ? 0 : (_volume * 100).round())}%',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Theme.of(context).textTheme.caption?.color,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ],
@@ -158,6 +208,7 @@ class _PlayerWidgetState extends State<PlayerWidget> {
 
   void _initAudioPlayer() {
     _audioPlayer = AudioPlayer(mode: mode);
+    _audioPlayer.setVolume(_volume);
 
     _durationSubscription = _audioPlayer.onDurationChanged.listen((duration) {
       setState(() => _duration = duration);
