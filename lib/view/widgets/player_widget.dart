@@ -31,6 +31,9 @@ class _PlayerWidgetState extends State<PlayerWidget> {
   late AudioPlayer _audioPlayer;
   Duration? _duration;
   Duration? _position;
+  double volume = 1.5;
+  bool isMuted = false;
+  double? previousVolume;
 
   PlayerState _playerState = PlayerState.stopped;
   StreamSubscription? _durationSubscription;
@@ -146,6 +149,52 @@ class _PlayerWidgetState extends State<PlayerWidget> {
                             _position!.inMilliseconds < _duration!.inMilliseconds)
                         ? _position!.inMilliseconds / _duration!.inMilliseconds
                         : 0.0,
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.all(12.0),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: Icon(
+                          isMuted ? Icons.volume_up : Icons.volume_off,
+                          color: Theme.of(context).accentColor,
+                        ),
+                        onPressed: () {
+                          isMuted = !isMuted;
+                          _audioPlayer.setVolume(isMuted ? 0.0 : volume);
+                        },
+                      ),
+                      Expanded(
+                        child: Slider(
+                          value: volume,
+                          min: 0.0,
+                          max: 2.0,
+                          onChanged: (value) {
+                            setState(() {
+                              volume = value;
+                            });
+                          },
+                        ),
+                      ),
+                      Text(
+                        '${(volume * 50).round()}%',
+                        style: Theme.of(context).textTheme.caption!.copyWith(
+                          fontSize: 10.0,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Container(
+                    height: 50,
+                    color: Colors.red.withOpacity(0.1),
+                    child: Center(
+                      child: Text('Volume Control Area'),
+                    ),
                   ),
                 ],
               ),
